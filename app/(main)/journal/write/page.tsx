@@ -14,23 +14,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import useFetch from '@/hooks/use-fetch';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import {
-  updateJournalEntry,
-  getJournalEntry,
-  getDraft,
-  saveDraft,
-} from '@/actions/journal';
-import { createCollection, getCollections } from '@/actions/collection';
 import { getMoodById, MOODS } from '@/assets/data/Moods';
 import { BarLoader } from 'react-spinners';
 import { toast } from 'sonner';
 import 'react-quill-new/dist/quill.snow.css';
-import CollectionForm from '@/components/collection-form';
 import { journalSchema } from '@/assets/constants/FormScheme';
-import { createJournalEntry } from '@/api/database/create-journal-entry';
+import {
+  createJournalEntry,
+  updateJournalEntry,
+  getJournalEntry,
+  getDraft,
+  saveDraft,
+} from '@/api/database/create-journal-entry';
+import useFetch from '@/hooks/use-fetcch';
+import { createCollection, getCollections } from '@/api/database/collections';
+import CollectionForm from '@/components/collection-form/CollectionForm';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
@@ -40,7 +40,7 @@ export default function JournalEntryPage() {
   const editId = searchParams.get('edit');
   const [isCollectionDialogOpen, setIsCollectionDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
-
+  console.log('write');
   // Fetch Hooks
   const {
     loading: collectionsLoading,
@@ -162,11 +162,12 @@ export default function JournalEntryPage() {
   }, [actionResult, actionLoading]);
 
   const onSubmit = handleSubmit(async (data) => {
-    const mood = getMoodById(data.mood);
+    const mood = getMoodById(data?.mood);
+    console.log('test');
     actionFn({
       ...data,
-      moodScore: mood.score,
-      moodQuery: mood.pixabayQuery,
+      moodScore: mood?.score,
+      moodQuery: mood?.pixabayQuery,
       ...(isEditMode && { id: editId }),
     });
   });

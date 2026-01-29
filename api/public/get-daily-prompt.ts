@@ -9,6 +9,7 @@ export const getDailyPrompt = unstable_cache(
       const data = await res.json();
       return data[0].q;
     } catch (error) {
+      console.log(JSON.stringify(error));
       return "What's on your mind today?";
     }
   },
