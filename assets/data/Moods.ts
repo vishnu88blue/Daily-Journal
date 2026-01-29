@@ -1,4 +1,4 @@
-type Mood = {
+export type MoodType = {
   id: string;
   label: string;
   emoji: string;
@@ -8,7 +8,7 @@ type Mood = {
   pixabayQuery: string;
 };
 
-export const MOODS: Record<string, Mood> = {
+export const MOODS: Record<string, MoodType> = {
   OVERJOYED: {
     id: 'overjoyed',
     label: 'Overjoyed',
@@ -288,7 +288,6 @@ export const getMoodTrend = ({ averageScore }: { averageScore: number }) => {
   if (averageScore >= 2) return 'Things have been challenging.';
   return "You've been having a tough time.";
 };
-
-export const getMoodById = ({ moodId }: { moodId: string }) => {
-  return MOODS[moodId?.toUpperCase()];
+export const getMoodById = (moodId: string): MoodType | undefined => {
+  return Object.values(MOODS).find((mood) => mood.id === moodId);
 };

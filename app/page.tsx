@@ -1,4 +1,5 @@
 import { getDailyPrompt } from '@/api/public/get-daily-prompt';
+import TestimonialCarousel from '@/components/testimonial/testimonial-carousel';
 import {
   AccordionContent,
   AccordionItem,
@@ -212,7 +213,7 @@ export default async function Home() {
       </div>
 
       {/* Testimonials Carousel */}
-      {/* <TestimonialCarousel /> */}
+      <TestimonialCarousel />
 
       {/* FAQ Section */}
       <div className="mt-24">
