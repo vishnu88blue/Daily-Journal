@@ -4,9 +4,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import EditButton from './_components/edit-button';
-import { getJournalEntry } from '@/api/database/create-journal-entry';
 import { getMoodById } from '@/assets/data/Moods';
 import DeleteDialog from './_components/delete-dialog';
+import { useGetJournalEntryQuery } from '@/api/database/journal/get-journal-entry';
 
 export default async function JournalEntryPage({
   params,
@@ -14,16 +14,18 @@ export default async function JournalEntryPage({
   params: { id: string };
 }) {
   const { id } = params;
-  const entry = await getJournalEntry(id);
-  const mood = getMoodById(entry?.mood ?? '');
-  console.log('hello');
+
+  // API call
+  const journalEntry = useGetJournalEntryQuery({ id });
+
+  const mood = getMoodById(journalEntry?.data?.mood ?? '');
   return (
     <>
       {/* Header with Mood Image */}
-      {entry?.moodImageUrl && (
+      {journalEntry?.data?.moodImageUrl && (
         <div className="relative h-48 md:h-64 w-full">
           <Image
-            src={entry.moodImageUrl}
+            src={journalEntry.data.moodImageUrl}
             alt="Mood visualization"
             className="object-contain"
             fill
@@ -39,11 +41,12 @@ export default async function JournalEntryPage({
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <h1 className="text-5xl font-bold gradient-title">
-                  {entry?.title}
+                  {journalEntry?.data?.title}
                 </h1>
               </div>
               <p className="text-gray-500">
-                Created {format(new Date(entry?.createdAt ?? ''), 'PPP')}
+                Created{' '}
+                {format(new Date(journalEntry?.data?.createdAt ?? ''), 'PPP')}
               </p>
             </div>
 
@@ -55,9 +58,9 @@ export default async function JournalEntryPage({
 
           {/* Tags Section */}
           <div className="flex flex-wrap gap-2">
-            {entry?.collection && (
-              <Link href={`/collection/${entry.collection.id}`}>
-                <Badge>Collection: {entry.collection.name}</Badge>
+            {journalEntry?.data?.collection && (
+              <Link href={`/collection/${journalEntry.data.collection.id}`}>
+                <Badge>Collection: {journalEntry.data.collection.name}</Badge>
               </Link>
             )}
             <Badge
@@ -79,13 +82,16 @@ export default async function JournalEntryPage({
         <div className="ql-snow">
           <div
             className="ql-editor"
-            dangerouslySetInnerHTML={{ __html: entry?.content ?? '' }}
+            dangerouslySetInnerHTML={{
+              __html: journalEntry?.data?.content ?? '',
+            }}
           />
         </div>
 
         {/* Footer */}
         <div className="text-sm text-gray-500 pt-4 border-t">
-          Last updated {format(new Date(entry?.updatedAt ?? ''), "PPP 'at' p")}
+          Last updated{' '}
+          {format(new Date(journalEntry?.data?.updatedAt ?? ''), "PPP 'at' p")}
         </div>
       </div>
     </>

@@ -1,12 +1,9 @@
-import { getCollections } from '@/api/database/collections';
 import { getJournalEntries } from '@/api/database/create-journal-entry';
 import Collections from './_components/collections';
 import MoodAnalytics from './_components/mood-analytics';
 
 const Dashboard = async () => {
-  const collections = await getCollections();
   const entriesData = await getJournalEntries();
-
   // Group entries by collection
   const entriesByCollection = entriesData?.data?.entries?.reduce(
     (acc, entry) => {
@@ -26,11 +23,7 @@ const Dashboard = async () => {
       <section className="space-y-4">
         <MoodAnalytics />
       </section>
-
-      <Collections
-        collections={collections}
-        entriesByCollection={entriesByCollection}
-      />
+      <Collections entriesByCollection={entriesByCollection} />
     </div>
   );
 };

@@ -21,16 +21,15 @@ import { BarLoader } from 'react-spinners';
 import { toast } from 'sonner';
 import 'react-quill-new/dist/quill.snow.css';
 import { journalSchema } from '@/assets/constants/FormScheme';
-import {
-  createJournalEntry,
-  updateJournalEntry,
-  getJournalEntry,
-  getDraft,
-  saveDraft,
-} from '@/api/database/create-journal-entry';
-import useFetch from '@/hooks/use-fetcch';
-import { createCollection, getCollections } from '@/api/database/collections';
 import CollectionForm from '@/components/collection-form/CollectionForm';
+import { useCreateCollectionMutation } from '@/api/database/collection/create-collection';
+import { getCollectionQuery } from '@/api/database/collection/get-collection';
+import { useGetJournalEntryQuery } from '@/api/database/journal/get-journal-entry';
+import { getJournalDraftQuery } from '@/api/database/journal/get-draft';
+import { CreateCollectionRequest } from '@/api/database/collections';
+import { useSaveDraftMutation } from '@/api/database/journal/save-draft';
+import { useCreateJournalEntryMutation } from '@/api/database/journal/create-journal-entry';
+import { useUpdateJournalEntryMutation } from '@/api/database/journal/update-journal-entry';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
@@ -38,41 +37,45 @@ export default function JournalEntryPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
-  const [isCollectionDialogOpen, setIsCollectionDialogOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  console.log('write');
-  // Fetch Hooks
-  const {
-    loading: collectionsLoading,
-    data: collections,
-    fn: fetchCollections,
-  } = useFetch(getCollections);
 
-  const {
-    loading: entryLoading,
-    data: existingEntry,
-    fn: fetchEntry,
-  } = useFetch(getJournalEntry);
+  // Use state
+  const [isCollectionDialogOpen, setIsCollectionDialogOpen] =
+    useState<boolean>(false);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
 
+  // API calls
   const {
-    loading: draftLoading,
+    refetch,
+    data: collectionsQueryData,
+    isFetching,
+  } = getCollectionQuery();
+  const {
+    refetch: refetchDraft,
     data: draftData,
-    fn: fetchDraft,
-  } = useFetch(getDraft);
-
-  const { loading: savingDraft, fn: saveDraftFn } = useFetch(saveDraft);
-
+    isFetching: draftIsFetching,
+    isSuccess: draftIsSuccess,
+  } = getJournalDraftQuery(false);
   const {
-    loading: actionLoading,
-    fn: actionFn,
-    data: actionResult,
-  } = useFetch(isEditMode ? updateJournalEntry : createJournalEntry);
+    data: journalEntryData,
+    refetch: refetchJournalEntry,
+    isFetching: journalEntryIsFetching,
+  } = useGetJournalEntryQuery({ id: editId ?? '' }, false);
+  const useCreateCollection = useCreateCollectionMutation();
+  const saveDraftMutation = useSaveDraftMutation();
+  const createJournalEntryMutation = useCreateJournalEntryMutation();
+  const updateJournalEntryMutation = useUpdateJournalEntryMutation();
 
-  const {
-    loading: createCollectionLoading,
-    fn: createCollectionFn,
-    data: createdCollection,
-  } = useFetch(createCollection);
+  const journalEntryLoading = isEditMode
+    ? updateJournalEntryMutation.isPending
+    : createJournalEntryMutation.isPending;
+
+  const journalEntrySuccess = isEditMode
+    ? updateJournalEntryMutation.isSuccess
+    : createJournalEntryMutation.isSuccess;
+
+  const journalEntryDataResult = isEditMode
+    ? updateJournalEntryMutation.data
+    : createJournalEntryMutation.data;
 
   const {
     register,
@@ -95,30 +98,30 @@ export default function JournalEntryPage() {
 
   // Handle draft or existing entry loading
   useEffect(() => {
-    fetchCollections();
+    refetch();
     if (editId) {
       setIsEditMode(true);
-      fetchEntry(editId);
+      refetchJournalEntry();
     } else {
       setIsEditMode(false);
-      fetchDraft();
+      refetchDraft();
     }
   }, [editId]);
 
   // Handle setting form data from draft
   useEffect(() => {
-    if (isEditMode && existingEntry) {
+    if (isEditMode && journalEntryData) {
       reset({
-        title: existingEntry.title || '',
-        content: existingEntry.content || '',
-        mood: existingEntry.mood || '',
-        collectionId: existingEntry.collectionId || '',
+        title: journalEntryData?.title || '',
+        content: journalEntryData?.content || '',
+        mood: journalEntryData?.mood || '',
+        collectionId: journalEntryData?.collectionId || '',
       });
-    } else if (draftData?.success && draftData?.data) {
+    } else if (draftIsSuccess && draftData) {
       reset({
-        title: draftData.data.title || '',
-        content: draftData.data.content || '',
-        mood: draftData.data.mood || '',
+        title: draftData.title || '',
+        content: draftData.content || '',
+        mood: draftData.mood || '',
         collectionId: '',
       });
     } else {
@@ -129,29 +132,33 @@ export default function JournalEntryPage() {
         collectionId: '',
       });
     }
-  }, [draftData, isEditMode, existingEntry]);
+  }, [draftData, isEditMode, journalEntryData]);
 
   // Handle collection creation success
   useEffect(() => {
-    if (createdCollection) {
+    if (useCreateCollection.isSuccess) {
       setIsCollectionDialogOpen(false);
-      fetchCollections();
-      setValue('collectionId', createdCollection.id);
-      toast.success(`Collection ${createdCollection.name} created!`);
+      refetch();
+      setValue('collectionId', useCreateCollection.data.id);
+      toast.success(`Collection ${useCreateCollection.data.name} created!`);
+    } else if (useCreateCollection.isError) {
+      toast.error(`Error: ${useCreateCollection.error.message}`);
     }
-  }, [createdCollection]);
+  }, [useCreateCollection.isPending]);
 
   // Handle successful submission
   useEffect(() => {
-    if (actionResult && !actionLoading) {
+    if (journalEntrySuccess) {
       // Clear draft after successful publish
       if (!isEditMode) {
-        saveDraftFn({ title: '', content: '', mood: '' });
+        saveDraftMutation.mutate({ title: '', content: '', mood: '' });
       }
 
       router.push(
         `/collection/${
-          actionResult.collectionId ? actionResult.collectionId : 'unorganized'
+          journalEntryDataResult?.collectionId
+            ? journalEntryDataResult.collectionId
+            : 'unorganized'
         }`,
       );
 
@@ -159,17 +166,22 @@ export default function JournalEntryPage() {
         `Entry ${isEditMode ? 'updated' : 'created'} successfully!`,
       );
     }
-  }, [actionResult, actionLoading]);
+  }, [journalEntryLoading]);
 
   const onSubmit = handleSubmit(async (data) => {
     const mood = getMoodById(data?.mood);
-    console.log('test');
-    actionFn({
-      ...data,
-      moodScore: mood?.score,
-      moodQuery: mood?.pixabayQuery,
-      ...(isEditMode && { id: editId }),
-    });
+    if (isEditMode) {
+      updateJournalEntryMutation.mutate({
+        ...data,
+        id: editId ?? '',
+        moodQuery: mood?.pixabayQuery ?? '',
+      });
+    } else {
+      createJournalEntryMutation.mutate({
+        ...data,
+        moodQuery: mood?.pixabayQuery ?? '',
+      });
+    }
   });
 
   const formData = watch();
@@ -179,22 +191,22 @@ export default function JournalEntryPage() {
       toast.error('No changes to save');
       return;
     }
-    const result = await saveDraftFn(formData);
-    if (result?.success) {
+    saveDraftMutation.mutate(formData);
+    if (saveDraftMutation.isSuccess) {
       toast.success('Draft saved successfully');
     }
   };
 
-  const handleCreateCollection = async (data) => {
-    createCollectionFn(data);
+  const handleCreateCollection = async (data: CreateCollectionRequest) => {
+    useCreateCollection.mutate(data);
   };
 
   const isLoading =
-    collectionsLoading ||
-    entryLoading ||
-    draftLoading ||
-    actionLoading ||
-    savingDraft;
+    isFetching ||
+    journalEntryIsFetching ||
+    draftIsFetching ||
+    journalEntryLoading ||
+    saveDraftMutation.isPending;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -302,7 +314,7 @@ export default function JournalEntryPage() {
                   <SelectValue placeholder="Choose a collection..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {collections?.map((collection) => (
+                  {collectionsQueryData?.map((collection) => (
                     <SelectItem key={collection.id} value={collection.id}>
                       {collection.name}
                     </SelectItem>
@@ -324,25 +336,29 @@ export default function JournalEntryPage() {
               type="button"
               variant="outline"
               onClick={handleSaveDraft}
-              disabled={savingDraft || !isDirty}
+              disabled={saveDraftMutation.isPending || !isDirty}
             >
-              {savingDraft && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {saveDraftMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Save as Draft
             </Button>
           )}
           <Button
             type="submit"
             variant="loginButton"
-            disabled={actionLoading || !isDirty}
+            disabled={journalEntryLoading || !isDirty}
           >
-            {actionLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {journalEntryLoading && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             {isEditMode ? 'Update' : 'Publish'}
           </Button>
           {isEditMode && (
             <Button
               onClick={(e) => {
                 e.preventDefault();
-                router.push(`/journal/${existingEntry.id}`);
+                router.push(`/journal/${journalEntryData?.id}`);
               }}
               variant="destructive"
             >
@@ -353,7 +369,7 @@ export default function JournalEntryPage() {
       </form>
 
       <CollectionForm
-        loading={createCollectionLoading}
+        loading={useCreateCollection.isPending}
         onSuccess={handleCreateCollection}
         open={isCollectionDialogOpen}
         setOpen={setIsCollectionDialogOpen}

@@ -15,35 +15,42 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
-import useFetch from '@/hooks/use-fetcch';
-import { deleteCollection } from '@/api/database/collections';
+import { getCollectionResponse } from '@/api/database/collection/get-collection';
+import { useDeleteCollectionMutation } from '@/api/database/collection/delete-collection';
 
 export default function DeleteCollectionDialog({
   collection,
   entriesCount = 0,
+}: {
+  collection: getCollectionResponse;
+  entriesCount: number;
 }) {
+  // Hooks
   const router = useRouter();
-  const [open, setOpen] = useState(false);
 
-  const {
-    loading: isDeleting,
-    fn: deleteCollectionFn,
-    data: deletedCollection,
-  } = useFetch(deleteCollection);
+  // Use States
+  const [open, setOpen] = useState<boolean>(false);
+
+  // API Call
+  const deleteMutation = useDeleteCollectionMutation();
 
   useEffect(() => {
-    if (deletedCollection && !isDeleting) {
+    if (deleteMutation.data && !deleteMutation.isPending) {
       setOpen(false);
-      toast.error(
-        `Collection "${collection.name}" and all its entries deleted`,
+      toast.success(
+        `Collection "${collection?.name}" and all its entries deleted`,
       );
       router.push('/dashboard');
+    } else if (deleteMutation.isError) {
+      toast.error(
+        `Failed to delete collection "${collection?.name}": ${deleteMutation.error.message}`,
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deletedCollection, isDeleting]);
+  }, [deleteMutation.isPending]);
 
   const handleDelete = async () => {
-    await deleteCollectionFn(collection.id);
+    deleteMutation.mutate({ id: collection.id });
   };
 
   return (
@@ -57,13 +64,13 @@ export default function DeleteCollectionDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            Delete &quot;{collection.name}&quot;?
+            Delete &quot;{collection?.name}&quot;?
           </AlertDialogTitle>
           <div className="space-y-2 text-muted-foreground text-sm">
             {/* fixing hydration errors */}
             <p>This will permanently delete:</p>
             <ul className="list-disc list-inside">
-              <li>The collection &quot;{collection.name}&quot;</li>
+              <li>The collection &quot;{collection?.name}&quot;</li>
               <li>
                 {entriesCount} journal{' '}
                 {entriesCount === 1 ? 'entry' : 'entries'}
@@ -79,9 +86,9 @@ export default function DeleteCollectionDialog({
           <Button
             onClick={handleDelete}
             className="bg-red-500 hover:bg-red-600"
-            disabled={isDeleting}
+            disabled={deleteMutation.isPending}
           >
-            {isDeleting ? 'Deleting...' : 'Delete Collection'}
+            {deleteMutation.isPending ? 'Deleting...' : 'Delete Collection'}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
