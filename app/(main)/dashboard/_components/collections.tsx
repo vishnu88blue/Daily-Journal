@@ -3,33 +3,35 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import CollectionPreview from './collection-preview';
-import { createCollection } from '@/api/database/collections';
-import useFetch from '@/hooks/use-fetcch';
 import CollectionForm from '@/components/collection-form/CollectionForm';
+import { useCreateCollectionMutation } from '@/api/database/collection/create-collection';
+import { CreateCollectionRequest } from '@/api/database/collections';
+import { getCollectionQuery } from '@/api/database/collection/get-collection';
 
-const Collections = ({ collections = [], entriesByCollection }) => {
-  const [isCollectionDialogOpen, setIsCollectionDialogOpen] = useState(false);
+const Collections = ({ entriesByCollection }) => {
+  // Use States
+  const [isCollectionDialogOpen, setIsCollectionDialogOpen] =
+    useState<boolean>(false);
 
-  const {
-    loading: createCollectionLoading,
-    fn: createCollectionFn,
-    data: createdCollection,
-  } = useFetch(createCollection);
+  // API calls
+  const collections = getCollectionQuery();
+  const useCreateCollection = useCreateCollectionMutation();
 
   useEffect(() => {
-    if (createdCollection) {
+    if (useCreateCollection.isSuccess) {
       // eslint-disable-next-line
       setIsCollectionDialogOpen((prev) => (prev ? false : prev));
-      fetchCollections(); // Refresh collections list
-      toast.success(`Collection ${createdCollection.name} created!`);
+      toast.success(`Collection ${useCreateCollection.data.name} created!`);
+    } else if (useCreateCollection.isError) {
+      toast.error(`Error: ${useCreateCollection.error.message}`);
     }
-  }, [createdCollection, createCollectionLoading]);
+  }, [useCreateCollection.isPending]);
 
-  const handleCreateCollection = async (data) => {
-    createCollectionFn(data);
+  const handleCreateCollection = async (data: CreateCollectionRequest) => {
+    useCreateCollection.mutate(data);
   };
 
-  if (collections.length === 0) return <></>;
+  if (collections?.data?.length === 0) return <></>;
 
   return (
     <section id="collections" className="space-y-6">
@@ -51,7 +53,7 @@ const Collections = ({ collections = [], entriesByCollection }) => {
         )}
 
         {/* User Collections */}
-        {collections?.map((collection) => (
+        {collections?.data?.map((collection) => (
           <CollectionPreview
             key={collection.id}
             id={collection.id}
@@ -61,7 +63,7 @@ const Collections = ({ collections = [], entriesByCollection }) => {
         ))}
 
         <CollectionForm
-          loading={createCollectionLoading}
+          loading={useCreateCollection.isPending}
           onSuccess={handleCreateCollection}
           open={isCollectionDialogOpen}
           setOpen={setIsCollectionDialogOpen}

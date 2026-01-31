@@ -1,4 +1,4 @@
-import { getDailyPrompt } from '@/api/public/get-daily-prompt';
+import DailyQuote from '@/components/daily-quote/DailyQuote';
 import TestimonialCarousel from '@/components/testimonial/testimonial-carousel';
 import {
   AccordionContent,
@@ -7,7 +7,6 @@ import {
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion } from '@radix-ui/react-accordion';
 import {
   BarChart2,
@@ -21,8 +20,6 @@ import {
 import Link from 'next/link';
 
 export default async function Home() {
-  const dailyAdvice = await getDailyPrompt();
-
   const features = [
     {
       icon: Book,
@@ -89,14 +86,7 @@ export default async function Home() {
                 <div className="h-3 w-3 rounded-full bg-orange-400" />
               </div>
             </div>
-            <div className="space-y-4 p-4">
-              <h3 className="text-xl font-semibold text-orange-900">
-                {dailyAdvice ? dailyAdvice : 'My Thoughts Today'}
-              </h3>
-              <Skeleton className="h-4 bg-orange-100 rounded w-3/4" />
-              <Skeleton className="h-4 bg-orange-100 rounded w-full" />
-              <Skeleton className="h-4 bg-orange-100 rounded w-2/3" />
-            </div>
+            <DailyQuote />
           </div>
         </div>
         <div className="flex justify-center gap-4">

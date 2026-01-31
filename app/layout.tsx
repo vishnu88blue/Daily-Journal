@@ -3,8 +3,9 @@ import { Nunito } from 'next/font/google';
 import './globals.css';
 import { ClerkProvider } from '@clerk/nextjs';
 import Header from '@/components/header/Header';
-import { ReactNode } from 'react';
+import { ReactNode, Suspense } from 'react';
 import { Toaster } from 'sonner';
+import { Providers } from './providers';
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -26,7 +27,11 @@ export default function RootLayout({
         >
           <div className="inset-0 bg-[url('/bg.jpg')] opacity-50 fixed -z-10" />
           <Header />
-          <main className="min-h-screen">{children}</main>
+          <main className="min-h-screen">
+            <Suspense>
+              <Providers>{children}</Providers>
+            </Suspense>
+          </main>
           <Toaster richColors />
 
           <footer className="bg-orange-300 py-12 bg-opacity-10">

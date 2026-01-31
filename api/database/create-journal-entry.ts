@@ -31,7 +31,34 @@ export type JournalsAPIDataType = {
   collectionId: string | null;
 };
 
-export async function createJournalEntry(data) {
+export type CreateJournalEntryRequest = {
+  title: string;
+  content: string;
+  mood: string;
+  moodQuery: string;
+  collectionId?: string;
+};
+
+export type GetJournalEntryRequest = {
+  id: string;
+};
+
+export type UpdateJournalEntryRequest = {
+  id: string;
+  title: string;
+  content: string;
+  mood: string;
+  moodQuery: string;
+  collectionId?: string;
+};
+
+export type SaveDraftRequest = {
+  title: string;
+  content: string;
+  mood: string;
+};
+
+export async function createJournalEntry(data: CreateJournalEntryRequest) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error('Unauthorized');
@@ -76,7 +103,7 @@ export async function createJournalEntry(data) {
     if (!mood) throw new Error('Invalid mood');
 
     // Get mood image from Pixabay
-    const moodImageUrl = await getPixabayImage(data.moodQuery);
+    const moodImageUrl = await getPixabayImage({ query: data.moodQuery });
 
     // Create the entry
     const entry = await db.entry.create({
@@ -202,43 +229,37 @@ export async function getJournalEntries({
   }
 }
 
-export async function getJournalEntry({ id }: { id: string }) {
-  try {
-    const { userId } = await auth();
-    if (!userId) throw new Error('Unauthorized');
+export async function getJournalEntry(data: GetJournalEntryRequest) {
+  const { userId } = await auth();
+  if (!userId) throw new Error('Unauthorized');
 
-    const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
-    });
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
 
-    if (!user) throw new Error('User not found');
+  if (!user) throw new Error('User not found');
 
-    const entry = await db.entry.findFirst({
-      where: {
-        id,
-        userId: user.id,
-      },
-      include: {
-        collection: {
-          select: {
-            id: true,
-            name: true,
-          },
+  const entry = await db.entry.findFirst({
+    where: {
+      id: data.id,
+      userId: user.id,
+    },
+    include: {
+      collection: {
+        select: {
+          id: true,
+          name: true,
         },
       },
-    });
+    },
+  });
 
-    if (!entry) return null;
+  if (!entry) throw new Error('Entry not found');
 
-    return entry;
-  } catch (error) {
-    throw new Error(
-      error instanceof Error ? error.message : 'Unexpected error',
-    );
-  }
+  return entry;
 }
 
-export async function deleteJournalEntry({ id }: { id: string }) {
+export async function deleteJournalEntry(data: GetJournalEntryRequest) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error('Unauthorized');
@@ -252,7 +273,7 @@ export async function deleteJournalEntry({ id }: { id: string }) {
     // Check if entry exists and belongs to user
     const entry = await db.entry.findFirst({
       where: {
-        id,
+        id: data.id,
         userId: user.id,
       },
     });
@@ -261,7 +282,7 @@ export async function deleteJournalEntry({ id }: { id: string }) {
 
     // Delete the entry
     await db.entry.delete({
-      where: { id },
+      where: { id: data.id },
     });
 
     revalidatePath('/dashboard');
@@ -273,7 +294,7 @@ export async function deleteJournalEntry({ id }: { id: string }) {
   }
 }
 
-export async function updateJournalEntry(data) {
+export async function updateJournalEntry(data: UpdateJournalEntryRequest) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error('Unauthorized');
@@ -301,7 +322,7 @@ export async function updateJournalEntry(data) {
     // Get new mood image if mood changed
     let moodImageUrl = existingEntry.moodImageUrl;
     if (existingEntry.mood !== mood.id) {
-      moodImageUrl = await getPixabayImage(data.moodQuery);
+      moodImageUrl = await getPixabayImage({ query: data.moodQuery });
     }
 
     // Update the entry
@@ -328,65 +349,51 @@ export async function updateJournalEntry(data) {
 }
 
 export async function getDraft() {
-  try {
-    const { userId } = await auth();
-    if (!userId) throw new Error('Unauthorized');
+  const { userId } = await auth();
+  if (!userId) throw new Error('Unauthorized');
 
-    const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
-    });
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
 
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    const draft = await db.draft.findUnique({
-      where: { userId: user.id },
-    });
-
-    return { success: true, data: draft };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unexpected error',
-    };
+  if (!user) {
+    throw new Error('User not found');
   }
+
+  const draft = await db.draft.findUnique({
+    where: { userId: user.id },
+  });
+
+  return draft;
 }
 
-export async function saveDraft(data) {
-  try {
-    const { userId } = await auth();
-    if (!userId) throw new Error('Unauthorized');
+export async function saveDraft(data: SaveDraftRequest) {
+  const { userId } = await auth();
+  if (!userId) throw new Error('Unauthorized');
 
-    const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
-    });
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
 
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    const draft = await db.draft.upsert({
-      where: { userId: user.id },
-      create: {
-        title: data.title,
-        content: data.content,
-        mood: data.mood,
-        userId: user.id,
-      },
-      update: {
-        title: data.title,
-        content: data.content,
-        mood: data.mood,
-      },
-    });
-
-    revalidatePath('/dashboard');
-    return { success: true, data: draft };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unexpected error',
-    };
+  if (!user) {
+    throw new Error('User not found');
   }
+
+  const draft = await db.draft.upsert({
+    where: { userId: user.id },
+    create: {
+      title: data.title,
+      content: data.content,
+      mood: data.mood,
+      userId: user.id,
+    },
+    update: {
+      title: data.title,
+      content: data.content,
+      mood: data.mood,
+    },
+  });
+
+  revalidatePath('/dashboard');
+  return draft;
 }

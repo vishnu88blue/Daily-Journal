@@ -5,8 +5,17 @@ import db from '@/lib/prisma';
 import { request } from '@arcjet/next';
 import { auth } from '@clerk/nextjs/server';
 import { revalidatePath } from 'next/cache';
+import { getCollectionResponse } from './collection/get-collection';
 
-export async function getCollections() {
+export type CreateCollectionRequest = {
+  name: string;
+  description?: string;
+};
+
+export type DeleteCollectionRequest = {
+  id: string;
+};
+export async function getCollections(): Promise<getCollectionResponse[]> {
   const { userId } = await auth();
   if (!userId) throw new Error('Unauthorized');
 
@@ -25,68 +34,8 @@ export async function getCollections() {
 
   return collections;
 }
-export type createCollectionData = {
-  name: string;
-  description?: string;
-};
-export async function createCollection(data: createCollectionData) {
-  try {
-    const { userId } = await auth();
-    if (!userId) throw new Error('Unauthorized');
 
-    // Get request data for ArcJet
-    const req = await request();
-
-    // Check rate limit
-    const decision = await aj.protect(req, {
-      userId,
-      requested: 1, // Specify how many tokens to consume
-    });
-
-    if (decision.isDenied()) {
-      if (decision.reason.isRateLimit()) {
-        const { remaining, reset } = decision.reason;
-        console.error({
-          code: 'RATE_LIMIT_EXCEEDED',
-          details: {
-            remaining,
-            resetInSeconds: reset,
-          },
-        });
-
-        throw new Error('Too many requests. Please try again later.');
-      }
-
-      throw new Error('Request blocked');
-    }
-
-    const user = await db.user.findUnique({
-      where: { clerkUserId: userId },
-    });
-
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    const collection = await db.collection.create({
-      data: {
-        name: data.name,
-        description: data.description,
-        userId: user.id,
-      },
-    });
-
-    revalidatePath('/dashboard');
-    return collection;
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-    throw new Error('An unknown error occurred');
-  }
-}
-
-export async function deleteCollection(id: string) {
+export async function deleteCollection(data: DeleteCollectionRequest) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error('Unauthorized');
@@ -100,7 +49,7 @@ export async function deleteCollection(id: string) {
     // Check if collection exists and belongs to user
     const collection = await db.collection.findFirst({
       where: {
-        id,
+        id: data.id,
         userId: user.id,
       },
     });
@@ -109,7 +58,7 @@ export async function deleteCollection(id: string) {
 
     // Delete the collection (entries will be cascade deleted)
     await db.collection.delete({
-      where: { id },
+      where: { id: data.id },
     });
 
     return true;
@@ -120,4 +69,33 @@ export async function deleteCollection(id: string) {
       throw new Error('An unknown error occurred');
     }
   }
+}
+
+export async function createCollectionFn(data: CreateCollectionRequest) {
+  const { userId } = await auth();
+  if (!userId) throw new Error('Unauthorized');
+
+  const req = await request();
+  const decision = await aj.protect(req, { userId, requested: 1 });
+
+  if (decision.isDenied()) {
+    throw new Error('Rate limit exceeded');
+  }
+
+  const user = await db.user.findUnique({
+    where: { clerkUserId: userId },
+  });
+
+  if (!user) throw new Error('User not found');
+
+  const collection = await db.collection.create({
+    data: {
+      name: data.name,
+      description: data.description,
+      userId: user.id,
+    },
+  });
+
+  revalidatePath('/dashboard');
+  return collection;
 }

@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { deleteJournalEntry } from '@/api/database/create-journal-entry';
-import useFetch from '@/hooks/use-fetcch';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -17,33 +15,42 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { useDeleteJournalEntryMutation } from '@/api/database/journal/delete-journal-entry';
 
 export default function DeleteDialog({ entryId }: { entryId: string }) {
   const router = useRouter();
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const {
-    loading: isDeleting,
-    fn: deleteEntryFn,
-    data: deletedEntry,
-  } = useFetch(deleteJournalEntry);
+  // Use stats
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
+
+  // API call
+  const deleteJournalEntryMutation = useDeleteJournalEntryMutation();
 
   useEffect(() => {
-    if (deletedEntry && !isDeleting) {
+    if (
+      deleteJournalEntryMutation.data &&
+      !deleteJournalEntryMutation.isPending
+    ) {
       // eslint-disable-next-line
       setDeleteDialogOpen((prev) => (prev ? false : prev));
 
       toast.success('Journal entry deleted successfully');
       router.push(
         `/collection/${
-          deletedEntry.collectionId ? deletedEntry.collectionId : 'unorganized'
+          deleteJournalEntryMutation.data.collectionId
+            ? deleteJournalEntryMutation.data.collectionId
+            : 'unorganized'
         }`,
       );
+    } else if (deleteJournalEntryMutation.error) {
+      toast.error(
+        `Error deleting journal entry: ${deleteJournalEntryMutation.error.message}`,
+      );
     }
-  }, [deletedEntry, isDeleting]);
+  }, [deleteJournalEntryMutation.isPending]);
 
   const handleDelete = async () => {
-    await deleteEntryFn(entryId);
+    deleteJournalEntryMutation.mutate({ id: entryId });
   };
 
   return (
@@ -67,9 +74,9 @@ export default function DeleteDialog({ entryId }: { entryId: string }) {
           <Button
             onClick={handleDelete}
             className="bg-red-500 hover:bg-red-600"
-            disabled={isDeleting}
+            disabled={deleteJournalEntryMutation.isPending}
           >
-            {isDeleting ? 'Deleting...' : 'Delete'}
+            {deleteJournalEntryMutation.isPending ? 'Deleting...' : 'Delete'}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
