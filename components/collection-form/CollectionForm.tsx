@@ -9,7 +9,7 @@ import { BarLoader } from 'react-spinners';
 
 import { collectionSchema } from '@/assets/constants/FormScheme';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import { createCollectionData } from '@/api/database/collections';
+import { CreateCollectionRequest } from '@/api/database/collections';
 
 const CollectionForm = ({
   onSuccess,
@@ -17,7 +17,7 @@ const CollectionForm = ({
   open,
   setOpen,
 }: {
-  onSuccess: (data: createCollectionData) => void;
+  onSuccess: (data: CreateCollectionRequest) => void;
   loading: boolean;
   open: boolean;
   setOpen: (open: boolean) => void;

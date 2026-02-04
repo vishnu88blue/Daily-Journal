@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { Card, CardContent } from '../ui/card';
+import { GetJournalEntryResponse } from '@/api/database/journal/get-journal-entry';
 
-const EntryCard = ({ entry }) => {
+const EntryCard = ({ entry }: { entry: GetJournalEntryResponse }) => {
   return (
     <Link href={`/journal/${entry.id}`}>
       <Card className="hover:shadow-md transition-shadow">
@@ -10,7 +11,7 @@ const EntryCard = ({ entry }) => {
           <div className="flex items-start justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <span className="text-2xl">{entry.moodData.emoji}</span>
+                {/* <span className="text-2xl">{entry.moodData.emoji}</span> */}
                 <h3 className="font-semibold text-lg">{entry.title}</h3>
               </div>
               <div

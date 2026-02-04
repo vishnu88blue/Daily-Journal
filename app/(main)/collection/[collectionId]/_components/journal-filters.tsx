@@ -31,7 +31,8 @@ export function JournalFilters({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMood, setSelectedMood] = useState('');
   const [date, setDate] = useState<Date | null>(null);
-  const [filteredEntries, setFilteredEntries] = useState(entries);
+  const [filteredEntries, setFilteredEntries] =
+    useState<GetJournalEntryResponse[]>(entries);
 
   // Apply filters whenever filter values or entries change
   useEffect(() => {
