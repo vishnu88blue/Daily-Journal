@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   LineChart,
@@ -23,55 +23,32 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import Link from 'next/link';
-import useFetch from '@/hooks/use-fetcch';
 import { getMoodById, getMoodTrend } from '@/assets/data/Moods';
-import { getAnalytics } from '@/api/database/analyitcs';
+import { getAnalyticsQuery } from '@/api/database/analytics/get-analytics';
 
-const timeOptions = [
+const timeOptions: { value: '7d' | '15d' | '30d'; label: string }[] = [
   { value: '7d', label: 'Last 7 Days' },
   { value: '15d', label: 'Last 15 Days' },
   { value: '30d', label: 'Last 30 Days' },
 ];
-export type Analyitcs = {
-  success: boolean;
-  data: {
-    // eslint-disable-next-line
-    entries: Array<any>;
-    timeline: {
-      date: string;
-      averageScore: number;
-      entryCount: number;
-    }[];
-    stats: {
-      totalEntries: number;
-      averageScore: number;
-      mostFrequentMood: string;
-      dailyAverage: number;
-    };
-  };
-};
-const MoodAnalytics = () => {
-  const [period, setPeriod] = useState('7d');
 
-  const {
-    loading,
-    data: analytics,
-    fn: fetchAnalytics,
-  } = useFetch(getAnalytics);
+const MoodAnalytics = () => {
+  const [period, setPeriod] = useState<'7d' | '15d' | '30d'>('7d');
+
+  const { data: analyticsData, isLoading } = getAnalyticsQuery(
+    { period },
+    period,
+  );
 
   const { isLoaded } = useUser();
 
-  useEffect(() => {
-    fetchAnalytics(period);
-  }, [period]);
-
-  if (loading || !analytics?.data || !isLoaded) {
+  if (isLoading || !analyticsData?.data || !isLoaded) {
     return <MoodAnalyticsSkeleton />;
   }
 
-  if (!analytics) return null;
+  if (!analyticsData.data) return null;
 
-  const { timeline, stats } = analytics.data;
+  const { timeline, stats } = analyticsData.data;
 
   const CustomTooltip = ({
     active,
@@ -102,8 +79,11 @@ const MoodAnalytics = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-5xl font-bold gradient-title">Dashboard</h2>
 
-        <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-[140px]">
+        <Select
+          value={period}
+          onValueChange={(value: '7d' | '15d' | '30d') => setPeriod(value)}
+        >
+          <SelectTrigger className="w-35">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -116,7 +96,7 @@ const MoodAnalytics = () => {
         </Select>
       </div>
 
-      {analytics.data.entries.length === 0 ? (
+      {analyticsData.data.entries.length === 0 ? (
         <div>
           No Entries Found.{' '}
           <Link href="/journal/write" className="underline text-orange-400">
@@ -166,7 +146,7 @@ const MoodAnalytics = () => {
               <CardContent>
                 <div className="text-2xl font-bold flex items-center gap-2">
                   {getMoodById(stats.mostFrequentMood)?.emoji}{' '}
-                  {getMoodTrend(stats.averageScore)}
+                  {getMoodTrend({ averageScore: stats.averageScore })}
                 </div>
               </CardContent>
             </Card>

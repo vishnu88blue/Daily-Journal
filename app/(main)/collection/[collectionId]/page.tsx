@@ -1,9 +1,9 @@
 'use client';
 
-import { getJournalEntries } from '@/api/database/create-journal-entry';
 import DeleteCollectionDialog from './_components/delete-collection';
 import { JournalFilters } from './_components/journal-filters';
 import { getCollectionQuery } from '@/api/database/collection/get-collection';
+import { useGetJournalEntriesQuery } from '@/api/database/journal/get-journal-entries';
 
 type CollectionPageProps = {
   params: {
@@ -11,9 +11,9 @@ type CollectionPageProps = {
   };
 };
 
-export default async function CollectionPage({ params }: CollectionPageProps) {
-  const { collectionId } = await params;
-  const entries = await getJournalEntries({ collectionId });
+export default function CollectionPage({ params }: CollectionPageProps) {
+  const { collectionId } = params;
+  const journalEntriesData = useGetJournalEntriesQuery({ collectionId });
   // API calls
   const collectionsData = getCollectionQuery();
 
@@ -34,7 +34,9 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
           {collection && (
             <DeleteCollectionDialog
               collection={collection}
-              entriesCount={entries.data.entries.length}
+              entriesCount={
+                journalEntriesData?.data ? journalEntriesData?.data.length : 0
+              }
             />
           )}
         </div>
@@ -44,7 +46,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
       </div>
 
       {/* Client-side Filters Component */}
-      <JournalFilters entries={entries.data.entries} />
+      <JournalFilters entries={journalEntriesData?.data || []} />
     </div>
   );
 }
