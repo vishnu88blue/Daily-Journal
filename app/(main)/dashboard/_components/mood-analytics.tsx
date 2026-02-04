@@ -55,23 +55,21 @@ const MoodAnalytics = () => {
     payload,
     label,
   }: {
-    active: boolean;
-    // eslint-disable-next-line
-    payload: any[];
+    active: boolean; // eslint-disable-next-line
+    payload: readonly Record<string, any>[];
     label: string;
   }) => {
-    if (active && payload?.length) {
-      return (
-        <div className="bg-white p-4 border rounded-lg shadow-lg">
-          <p className="font-medium">
-            {format(parseISO(label), 'MMM d, yyyy')}
-          </p>
-          <p className="text-orange-600">Average Mood: {payload[0].value}</p>
-          <p className="text-blue-600">Entries: {payload[1].value}</p>
-        </div>
-      );
+    if (!active || !payload || payload.length < 2) {
+      return null;
     }
-    return <></>;
+
+    return (
+      <div className="bg-white p-4 border rounded-lg shadow-lg">
+        <p className="font-medium">{format(parseISO(label!), 'MMM d, yyyy')}</p>
+        <p className="text-orange-600">Average Mood: {payload[0].value}</p>
+        <p className="text-blue-600">Entries: {payload[1].value}</p>
+      </div>
+    );
   };
 
   return (
@@ -181,7 +179,16 @@ const MoodAnalytics = () => {
                       domain={[0, 'auto']}
                     />
                     {/* eslint-disable-next-line*/}
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip
+                      content={({ active, payload, label }) => (
+                        <CustomTooltip
+                          active={active}
+                          payload={payload}
+                          label={label ? label.toString() : ''}
+                        />
+                      )}
+                    />
+
                     <Legend />
                     <Line
                       yAxisId="left"

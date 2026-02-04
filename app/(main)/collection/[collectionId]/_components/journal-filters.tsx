@@ -17,7 +17,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { format, isSameDay } from 'date-fns';
-import { Calendar as CalendarIcon, Search } from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MOODS } from '@/assets/data/Moods';
 import EntryCard from '@/components/entry-card/EntryCard';
@@ -77,8 +77,7 @@ export function JournalFilters({
             placeholder="Search entries..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
-            prefix={<Search className="h-4 w-4 text-gray-400" />}
+            className="w-full pl-10"
           />
         </div>
 
