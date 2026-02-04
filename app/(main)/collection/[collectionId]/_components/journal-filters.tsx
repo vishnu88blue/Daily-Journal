@@ -21,11 +21,16 @@ import { Calendar as CalendarIcon, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MOODS } from '@/assets/data/Moods';
 import EntryCard from '@/components/entry-card/EntryCard';
+import { GetJournalEntryResponse } from '@/api/database/journal/get-journal-entry';
 
-export function JournalFilters({ entries }) {
+export function JournalFilters({
+  entries,
+}: {
+  entries: GetJournalEntryResponse[];
+}) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMood, setSelectedMood] = useState('');
-  const [date, setDate] = useState(null);
+  const [date, setDate] = useState<Date | null>(null);
   const [filteredEntries, setFilteredEntries] = useState(entries);
 
   // Apply filters whenever filter values or entries change
@@ -108,9 +113,10 @@ export function JournalFilters({ entries }) {
           <PopoverContent className="w-auto p-0">
             <Calendar
               mode="single"
-              selected={date}
+              selected={date ? date : undefined}
               onSelect={setDate}
               initialFocus
+              required
             />
           </PopoverContent>
         </Popover>

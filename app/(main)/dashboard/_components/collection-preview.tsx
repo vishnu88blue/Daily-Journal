@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { Plus } from 'lucide-react';
 import { getMoodById } from '@/assets/data/Moods';
+import { GetJournalEntryResponse } from '@/api/database/journal/get-journal-entry';
 
 const colorSchemes = {
   unorganized: {
@@ -26,7 +27,7 @@ const FolderTab = ({ colorClass }: { colorClass: string }) => (
   />
 );
 
-const EntryPreview = ({ entry }) => (
+const EntryPreview = ({ entry }: { entry: GetJournalEntryResponse }) => (
   <div className="bg-white/50 p-2 rounded text-sm truncate">
     <span className="mr-2">{getMoodById(entry.mood)?.emoji}</span>
     {entry.title}

@@ -1,11 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import {
-  getDraft,
-  getJournalEntry,
-  GetJournalEntryRequest,
-} from '../create-journal-entry';
+import { getDraft } from '../create-journal-entry';
 
 export type GetJournalEntryResponse = {
   userId: string;

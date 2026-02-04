@@ -1,21 +1,25 @@
-import { getJournalEntries } from '@/api/database/create-journal-entry';
+'use client';
 import Collections from './_components/collections';
 import MoodAnalytics from './_components/mood-analytics';
+import {
+  GetJournalEntriesResponse,
+  useGetJournalEntriesQuery,
+} from '@/api/database/journal/get-journal-entries';
 
-const Dashboard = async () => {
-  const entriesData = await getJournalEntries();
+const Dashboard = () => {
+  const { data: getJournalEntriesData } = useGetJournalEntriesQuery({});
+
   // Group entries by collection
-  const entriesByCollection = entriesData?.data?.entries?.reduce(
-    (acc, entry) => {
-      const collectionId = entry.collectionId || 'unorganized';
-      if (!acc[collectionId]) {
-        acc[collectionId] = [];
-      }
-      acc[collectionId].push(entry);
-      return acc;
-    },
-    {},
-  );
+  const entriesByCollection = getJournalEntriesData?.reduce<
+    Record<string, GetJournalEntriesResponse[]>
+  >((acc, entry) => {
+    const collectionId = entry.collectionId || 'unorganized';
+    if (!acc[collectionId]) {
+      acc[collectionId] = [];
+    }
+    acc[collectionId].push(entry);
+    return acc;
+  }, {});
 
   return (
     <div className="px-4 py-8 space-y-8">

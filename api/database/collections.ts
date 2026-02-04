@@ -15,6 +15,7 @@ export type CreateCollectionRequest = {
 export type DeleteCollectionRequest = {
   id: string;
 };
+
 export async function getCollections(): Promise<getCollectionResponse[]> {
   const { userId } = await auth();
   if (!userId) throw new Error('Unauthorized');

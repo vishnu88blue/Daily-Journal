@@ -7,8 +7,13 @@ import CollectionForm from '@/components/collection-form/CollectionForm';
 import { useCreateCollectionMutation } from '@/api/database/collection/create-collection';
 import { CreateCollectionRequest } from '@/api/database/collections';
 import { getCollectionQuery } from '@/api/database/collection/get-collection';
+import { GetJournalEntriesResponse } from '@/api/database/journal/get-journal-entries';
 
-const Collections = ({ entriesByCollection }) => {
+const Collections = ({
+  entriesByCollection,
+}: {
+  entriesByCollection: Record<string, GetJournalEntriesResponse[]> | undefined;
+}) => {
   // Use States
   const [isCollectionDialogOpen, setIsCollectionDialogOpen] =
     useState<boolean>(false);
@@ -44,13 +49,14 @@ const Collections = ({ entriesByCollection }) => {
         />
 
         {/* Unorganized Collection */}
-        {entriesByCollection?.unorganized?.length > 0 && (
-          <CollectionPreview
-            name="Unorganized"
-            entries={entriesByCollection.unorganized}
-            isUnorganized={true}
-          />
-        )}
+        {entriesByCollection?.unorganized &&
+          entriesByCollection?.unorganized?.length > 0 && (
+            <CollectionPreview
+              name="Unorganized"
+              entries={entriesByCollection.unorganized}
+              isUnorganized={true}
+            />
+          )}
 
         {/* User Collections */}
         {collections?.data?.map((collection) => (
@@ -58,7 +64,9 @@ const Collections = ({ entriesByCollection }) => {
             key={collection.id}
             id={collection.id}
             name={collection.name}
-            entries={entriesByCollection[collection.id] || []}
+            entries={
+              entriesByCollection ? entriesByCollection[collection.id] : []
+            }
           />
         ))}
 

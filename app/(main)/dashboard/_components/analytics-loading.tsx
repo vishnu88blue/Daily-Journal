@@ -28,7 +28,7 @@ const MoodAnalyticsSkeleton = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] w-full">
+          <div className="h-75 w-full">
             <div className="animate-pulse space-y-4">
               {/* Chart area skeleton */}
               <div className="h-full w-full bg-linear-to-r from-gray-200 via-gray-100 to-gray-200 rounded-lg opacity-75" />

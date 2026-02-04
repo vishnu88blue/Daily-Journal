@@ -3,9 +3,25 @@
 
 import { auth } from '@clerk/nextjs/server';
 import db from '@/lib/prisma';
-import { Analyitcs } from '@/app/(main)/dashboard/_components/mood-analytics';
 
-export async function getAnalytics(period = '30d'): Promise<Analyitcs> {
+export type AnalyticsRequest = {
+  period: '7d' | '15d' | '30d';
+};
+
+type EntriesType = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+  title: string;
+  content: string;
+  mood: string;
+  moodScore: number;
+  moodImageUrl: string | null;
+  collectionId: string | null;
+};
+
+export async function getAnalytics(request: AnalyticsRequest) {
   const { userId } = await auth();
   if (!userId) throw new Error('Unauthorized');
 
@@ -17,7 +33,7 @@ export async function getAnalytics(period = '30d'): Promise<Analyitcs> {
 
   // Calculate start date based on period
   const startDate = new Date();
-  switch (period) {
+  switch (request.period) {
     case '7d':
       startDate.setDate(startDate.getDate() - 7);
       break;
@@ -44,7 +60,16 @@ export async function getAnalytics(period = '30d'): Promise<Analyitcs> {
   });
 
   // Process entries for analytics
-  const moodData = entries.reduce((acc, entry) => {
+  const moodData = entries.reduce<
+    Record<
+      string,
+      {
+        totalScore: number;
+        count: number;
+        entries: EntriesType[];
+      }
+    >
+  >((acc, entry) => {
     const date = entry.createdAt.toISOString().split('T')[0];
     if (!acc[date]) {
       acc[date] = {
@@ -76,20 +101,20 @@ export async function getAnalytics(period = '30d'): Promise<Analyitcs> {
       ).toFixed(1),
     ),
     mostFrequentMood: Object.entries(
-      entries.reduce((acc, entry) => {
+      entries.reduce<Record<string, number>>((acc, entry) => {
         acc[entry.mood] = (acc[entry.mood] || 0) + 1;
         return acc;
       }, {}),
     ).sort((a, b) => b[1] - a[1])[0]?.[0],
     dailyAverage: Number(
       (
-        entries.length / (period === '7d' ? 7 : period === '15d' ? 15 : 30)
+        entries.length /
+        (request.period === '7d' ? 7 : request.period === '15d' ? 15 : 30)
       ).toFixed(1),
     ),
   };
 
   return {
-    success: true,
     data: {
       timeline: analyticsData,
       stats: overallStats,
