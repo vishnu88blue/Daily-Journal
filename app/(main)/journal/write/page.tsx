@@ -22,14 +22,14 @@ import { toast } from 'sonner';
 import 'react-quill-new/dist/quill.snow.css';
 import { journalSchema } from '@/assets/constants/FormScheme';
 import CollectionForm from '@/components/collection-form/CollectionForm';
-import { useCreateCollectionMutation } from '@/api/database/collection/create-collection';
-import { getCollectionQuery } from '@/api/database/collection/get-collection';
-import { useGetJournalEntryQuery } from '@/api/database/journal/get-journal-entry';
-import { getJournalDraftQuery } from '@/api/database/journal/get-draft';
-import { CreateCollectionRequest } from '@/api/database/collections';
-import { useSaveDraftMutation } from '@/api/database/journal/save-draft';
-import { useCreateJournalEntryMutation } from '@/api/database/journal/create-journal-entry';
-import { useUpdateJournalEntryMutation } from '@/api/database/journal/update-journal-entry';
+import { useCreateCollectionMutation } from '@/lib/api/database/collection/create-collection';
+import { getCollectionQuery } from '@/lib/api/database/collection/get-collection';
+import { useGetJournalEntryQuery } from '@/lib/api/database/journal/get-journal-entry';
+import { getJournalDraftQuery } from '@/lib/api/database/journal/get-draft';
+import { CreateCollectionRequest } from '@/lib/api/database/collections';
+import { useSaveDraftMutation } from '@/lib/api/database/journal/save-draft';
+import { useCreateJournalEntryMutation } from '@/lib/api/database/journal/create-journal-entry';
+import { useUpdateJournalEntryMutation } from '@/lib/api/database/journal/update-journal-entry';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 

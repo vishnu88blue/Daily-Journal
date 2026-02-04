@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import EditButton from './_components/edit-button';
 import { getMoodById } from '@/assets/data/Moods';
 import DeleteDialog from './_components/delete-dialog';
-import { useGetJournalEntryQuery } from '@/api/database/journal/get-journal-entry';
+import { useGetJournalEntryQuery } from '@/lib/api/database/journal/get-journal-entry';
 import { useParams } from 'next/navigation';
 
 export default async function JournalEntryPage() {

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { Plus } from 'lucide-react';
 import { getMoodById } from '@/assets/data/Moods';
-import { GetJournalEntryResponse } from '@/api/database/journal/get-journal-entry';
+import { GetJournalEntryResponse } from '@/lib/api/database/journal/get-journal-entry';
 
 const colorSchemes = {
   unorganized: {

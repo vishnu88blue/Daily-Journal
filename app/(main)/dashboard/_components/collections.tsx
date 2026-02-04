@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import CollectionPreview from './collection-preview';
 import CollectionForm from '@/components/collection-form/CollectionForm';
-import { useCreateCollectionMutation } from '@/api/database/collection/create-collection';
-import { CreateCollectionRequest } from '@/api/database/collections';
-import { getCollectionQuery } from '@/api/database/collection/get-collection';
-import { GetJournalEntriesResponse } from '@/api/database/journal/get-journal-entries';
+import { useCreateCollectionMutation } from '@/lib/api/database/collection/create-collection';
+import { CreateCollectionRequest } from '@/lib/api/database/collections';
+import { getCollectionQuery } from '@/lib/api/database/collection/get-collection';
+import { GetJournalEntriesResponse } from '@/lib/api/database/journal/get-journal-entries';
 
 const Collections = ({
   entriesByCollection,

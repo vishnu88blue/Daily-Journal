@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuoteQuery } from '@/api/public/get-daily-prompts';
+import { useQuoteQuery } from '@/lib/api/public/get-daily-prompts';
 import { Skeleton } from '../ui/skeleton';
 
 const DailyQuote = () => {

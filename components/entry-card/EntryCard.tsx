@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { Card, CardContent } from '../ui/card';
-import { GetJournalEntryResponse } from '@/api/database/journal/get-journal-entry';
+import { GetJournalEntryResponse } from '@/lib/api/database/journal/get-journal-entry';
 
 const EntryCard = ({ entry }: { entry: GetJournalEntryResponse }) => {
   return (

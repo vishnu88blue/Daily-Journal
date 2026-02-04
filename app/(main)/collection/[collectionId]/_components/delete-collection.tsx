@@ -15,8 +15,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
-import { getCollectionResponse } from '@/api/database/collection/get-collection';
-import { useDeleteCollectionMutation } from '@/api/database/collection/delete-collection';
+import { getCollectionResponse } from '@/lib/api/database/collection/get-collection';
+import { useDeleteCollectionMutation } from '@/lib/api/database/collection/delete-collection';
 
 export default function DeleteCollectionDialog({
   collection,
