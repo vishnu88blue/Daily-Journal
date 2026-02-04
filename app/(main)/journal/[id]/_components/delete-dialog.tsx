@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useDeleteJournalEntryMutation } from '@/api/database/journal/delete-journal-entry';
+import { useDeleteJournalEntryMutation } from '@/lib/api/database/journal/delete-journal-entry';
 
 export default function DeleteDialog({ entryId }: { entryId: string }) {
   const router = useRouter();

@@ -4,7 +4,7 @@ import MoodAnalytics from './_components/mood-analytics';
 import {
   GetJournalEntriesResponse,
   useGetJournalEntriesQuery,
-} from '@/api/database/journal/get-journal-entries';
+} from '@/lib/api/database/journal/get-journal-entries';
 
 const Dashboard = () => {
   const { data: getJournalEntriesData } = useGetJournalEntriesQuery({});

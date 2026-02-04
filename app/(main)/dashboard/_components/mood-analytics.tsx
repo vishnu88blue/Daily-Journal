@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/select';
 import Link from 'next/link';
 import { getMoodById, getMoodTrend } from '@/assets/data/Moods';
-import { getAnalyticsQuery } from '@/api/database/analytics/get-analytics';
+import { getAnalyticsQuery } from '@/lib/api/database/analytics/get-analytics';
 
 const timeOptions: { value: '7d' | '15d' | '30d'; label: string }[] = [
   { value: '7d', label: 'Last 7 Days' },

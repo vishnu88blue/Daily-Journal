@@ -3,8 +3,8 @@
 import { useParams } from 'next/navigation';
 import DeleteCollectionDialog from './_components/delete-collection';
 import { JournalFilters } from './_components/journal-filters';
-import { getCollectionQuery } from '@/api/database/collection/get-collection';
-import { useGetJournalEntriesQuery } from '@/api/database/journal/get-journal-entries';
+import { getCollectionQuery } from '@/lib/api/database/collection/get-collection';
+import { useGetJournalEntriesQuery } from '@/lib/api/database/journal/get-journal-entries';
 
 export default function CollectionPage() {
   const { collectionId } = useParams<{ collectionId: string }>();

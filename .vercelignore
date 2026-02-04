@@ -1,0 +1,2 @@
+# Exclude legacy client-only API helpers from Vercel deployment
+api/**

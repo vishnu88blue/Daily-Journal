@@ -9,7 +9,7 @@ import { BarLoader } from 'react-spinners';
 
 import { collectionSchema } from '@/assets/constants/FormScheme';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import { CreateCollectionRequest } from '@/api/database/collections';
+import { CreateCollectionRequest } from '@/lib/api/database/collections';
 
 const CollectionForm = ({
   onSuccess,

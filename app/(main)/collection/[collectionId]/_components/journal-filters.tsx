@@ -21,7 +21,7 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MOODS } from '@/assets/data/Moods';
 import EntryCard from '@/components/entry-card/EntryCard';
-import { GetJournalEntryResponse } from '@/api/database/journal/get-journal-entry';
+import { GetJournalEntryResponse } from '@/lib/api/database/journal/get-journal-entry';
 
 export function JournalFilters({
   entries,
